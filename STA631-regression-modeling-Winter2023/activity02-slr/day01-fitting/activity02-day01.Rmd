@@ -1,0 +1,94 @@
+---
+title: "Activity 2 - Day 1"
+output: github_document
+---
+
+```{setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+The dataset contains 1620 rows and 120 columns. Each row represents the Human Freedom Index score for a particular country and year, along with various sub-indices and component scores.
+```{r}
+library(tidyverse)
+library(tidymodels)
+library(dplyr)
+hfi <- readr::read_csv("https://www.openintro.org/data/csv/hfi.csv")
+hfi_2016 <- filter(hfi,year == 2016)
+
+
+```
+To display the relationship between the personal freedom score (pf_score) and pf_expression_control, a scatter plot would be appropriate. This would allow us to visualize any patterns or trends in the data and identify any potential outliers.
+```{r}
+
+ggplot(hfi_2016, aes(x = pf_expression_control, y = pf_score)) +
+  geom_point()
+```
+
+Based on the scatter plot, the relationship between pf_expression_control and pf_score does not appear to be perfectly linear. There seems to be a general decreasing trend in pf_score as pf_expression_control increases, but there is also a lot of variation in the data and some outliers.
+
+If we knew a country's pf_expression_control score, it may not be appropriate to use a linear model to predict its pf_score. We would need to assess the linearity assumption and potential outliers in the data, and consider alternative modeling approaches if necessary.
+```{r}
+
+m1 <- lm(pf_score ~ pf_expression_control, data = hfi_2016)
+tidy(m1)
+```
+The y-intercept (4.28) represents the predicted value of pf_score when pf_expression_control is zero. This intercept value is not meaningful in the context of the data, as there are no countries with a pf_expression_control score of zero. Therefore, it's important to interpret the intercept with caution and not over-interpret its meaning.
+The slope (0.542) represents the predicted change in pf_score for every one-unit increase in pf_expression_control. In other words, on average, countries with a one-unit higher pf_expression_control score are predicted to have a 0.542-point higher pf_score. This suggests a positive association between pf_expression_control and pf_score, where higher levels of political pressures and controls on media content are associated with higher levels of personal freedom. However, it's important to note that correlation does not imply causation and other factors could be influencing the relationship
+```{r}
+
+library(dplyr)
+
+hfi_2016 %>%
+  summarize(correlation = cor(pf_expression_control, pf_score))
+
+```
+The correlation coefficient measures the strength and direction of the linear relationship between pf_expression_control and pf_score. In this case, the correlation coefficient between pf_expression_control and pf_score in the hfi_2016 dataset is a positive value of 0.845.
+
+A correlation coefficient of 0.845 suggests a moderately strong positive linear relationship between pf_expression_control and pf_score. In other words, as pf_expression_control scores increase, pf_score tends to increase as well. This is consistent with the positive slope in the linear regression model we created earlier, which suggested that higher levels of political pressures and controls on media content are associated with higher levels of personal freedom.
+
+It's important to note that correlation does not imply causation, and other factors could be influencing the relationship between pf_expression_control and pf_score.
+
+```{r}
+glance(m1)
+
+```
+R square: 0.714
+The R-squared value, also known as the coefficient of determination, measures the proportion of variance in the dependent variable (pf_score) that is explained by the independent variable (pf_expression_control) in a linear regression model.
+
+In this case, the R-squared value of the model is 0.714. This means that about 71.4% of the variability in pf_score can be explained by the linear relationship with pf_expression_control in the hfi_2016 dataset.
+
+In other words, the model with pf_expression_control as the predictor variable explains 71.4% of the variation in pf_score among the countries in the dataset. This indicates that the model is a moderately good fit for the data and suggests that pf_expression_control is a useful predictor of pf_score in the context of the hfi_2016 dataset. However, as with any statistical model, it's important to assess the model's assumptions and limitations before drawing any definitive conclusions.
+```{r}
+
+model_hf <- lm(hf_score ~ pf_expression_control, data = hfi_2016)
+summary(model_hf)
+
+```
+This code fits a new linear regression model using hf_score as the dependent variable and pf_expression_control as the independent variable in the hfi_2016 dataset. The output of the summary() function gives us the estimates for the coefficients of the regression line, including the intercept and slope.
+
+The equation of the regression line for this model is:
+
+hf_score = -1.139 + 0.629 * pf_expression_control
+
+The slope of the regression line is 0.629, which indicates that for every unit increase in pf_expression_control, hf_score tends to increase by an average of 0.629 units.
+
+In the context of the relationship between human freedom and political pressure on media content, this suggests that higher levels of political pressures and controls on media content are associated with lower levels of human freedom. However, as with any statistical model, it's important to assess the model's assumptions and limitations before drawing any definitive conclusions.
+
+```{r}
+m1_aug <- augment(m1)
+```
+
+```{r}
+
+ggplot(data = m1_aug, aes(x = .fitted, y = .resid)) +
+  geom_point() +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+  xlab("Fitted values") +
+  ylab("Residuals")
+```
+
+```{r}
+ggplot(data = m1_aug, aes(x = .resid)) +
+  geom_histogram(binwidth = 0.25) +
+  xlab("Residuals")
+```
+
